@@ -163,6 +163,7 @@ function hideButtonsPostGame() {
     getInputElement().hide();
     getGuessButton().hide();
     getHintButton().hide();
+    getInstructions().hide();
 
     getResetButton().val( "Start new game" );
 }
@@ -189,14 +190,17 @@ function onLose() {
 }
 
 function guessValue() {
+    // hide the instructions after the first guess
     getInstructions().hide();
 
+    // do the guesswork (ha)
     var guess = getInputElement().val();
     getCurrentGame().guessValue( guess );
+    clearInput();
 }
 
 function getHint() {
-    getOutputElement().html( "You should have guessed " + getCurrentGame().getValue() );
+    getOutputElement().html( "Giving up already?<br>You should have guessed " + getCurrentGame().getValue() );
     hideButtonsPostGame();
 }
 
@@ -211,3 +215,12 @@ function startNewGame() {
             onLose          // onLose function
     )
 }
+
+$( document ).ready( function() {
+    startNewGame();
+
+    // add our jquery event handlers
+    getGuessButton().click( guessValue );
+    getHintButton().click( getHint );
+    getResetButton().click( startNewGame );
+} );
