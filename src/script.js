@@ -116,6 +116,76 @@ GuessingGame.prototype.guessValue = function( guess ) {
     }
 }
 
+// sprite object definition
+function Sprite ( element ) {
+    this.element = element;
+}
+
+Sprite.prototype.setPosition = function( x, y ) {
+    this.element.offset( { left:x, top:y } );
+}
+
+Sprite.prototype.getPosition = function() {
+    return this.element.offset();
+}
+
+Sprite.prototype.setX = function( x ) {
+    this.setPosition( x, this.getY() );
+}
+
+Sprite.prototype.getX = function() {
+    return this.getPosition().left;
+}
+
+Sprite.prototype.setY = function( y ) {
+    this.setPosition( this.getX(), y );
+}
+
+Sprite.prototype.getY = function() {
+  return this.getPosition().top;
+}
+
+Sprite.prototype.setSrc = function( src ) {
+    this.attr( "src", src );
+}
+
+// golfball object defs
+function Golfball ( element ) {
+    this.element = element;
+    this.sprite = new Sprite( element );
+    this.anim_time = 0;
+    this.dest_x = 0;
+    this.init_pos = this.sprite.getPosition();
+}
+
+Golfball.prototype.resetAnimation = function( dest_x ) {
+    if ( dest_x != undefined ) this.dest_x = dest_x;
+    this.sprite.setPosition( this.init_pos.left, this.init_pos.top );
+    this.anim_time = 0;
+}
+
+Golfball.prototype.computeYAt = function( point ) {
+    point = (point * 2) - 1; // since we're using a parabola here, we shift the point
+    return getDave().getY() - this.element.height() + ( point * point ) * getDave().element.height();
+}
+
+Golfball.prototype.advanceAnim = function( dt ) {
+    this.anim_time += dt;
+    this.sprite.setPosition( this.init_pos.left + this.dest_x * this.anim_time, this.computeYAt( this.anim_time ) );
+}
+
+Golfball.prototype.parabolaAnimation = function( dest_x ) {
+    this.resetAnimation( dest_x );
+    
+    var anim_ball = this;
+    var anim_timer = setInterval( function() {
+        anim_ball.advanceAnim( 0.01 );
+        if ( anim_ball.anim_time >= 1 ) {
+          clearInterval( anim_timer );
+        }
+    }, 10 );
+}
+
 // website logic
 var current_game;
 
@@ -151,6 +221,25 @@ function getInstructions() {
     return $( "#instructions" );
 }
 
+var sprite_flag;
+function getFlag() {
+    return sprite_flag;
+}
+
+var sprite_dave;
+function getDave() {
+    return sprite_dave;
+}
+
+var sprite_ball;
+function getBall() {
+    return sprite_ball;
+}
+
+function toPlayAreaX( x ) {
+    return getDave().getX() + 130 + ( x * 6 );
+}
+
 function clearOutput() {
     getOutputElement().html( '' );
 }
@@ -180,7 +269,7 @@ function showButtonsPreGame() {
 }
 
 function onWin() {
-    getOutputElement().html( "You won in " + getCurrentGame().getNumberOfGuesses() + " shots!" );
+    getOutputElement().html( "You won in " + ( getCurrentGame().getNumberOfGuesses() + 1 ) + " shots!" );
     hideButtonsPostGame();
 }
 
@@ -197,6 +286,9 @@ function guessValue() {
     var guess = getInputElement().val();
     getCurrentGame().guessValue( guess );
     clearInput();
+
+    // do our cool golfball animation
+    getBall().parabolaAnimation( guess * 6 );
 }
 
 function getHint() {
@@ -214,13 +306,22 @@ function startNewGame() {
             onWin,          // onWin function
             onLose          // onLose function
     )
+
+    getFlag().setX( toPlayAreaX( getCurrentGame().getValue() ) - 8 );
+    getBall().resetAnimation();
 }
 
 $( document ).ready( function() {
-    startNewGame();
-
     // add our jquery event handlers
     getGuessButton().click( guessValue );
     getHintButton().click( getHint );
     getResetButton().click( startNewGame );
+
+    // initialize our sprites
+    sprite_dave = new Sprite( $( "#sprite_dave" ) );
+    sprite_flag = new Sprite( $( "#sprite_flag" ) );
+    sprite_ball = new Golfball( $( "#sprite_ball" ) );
+
+    // start the game!
+    startNewGame();
 } );
