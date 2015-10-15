@@ -3,8 +3,11 @@
     <head>
       <title>Number Golf</title>
       <link rel="stylesheet" href="style.css">
+
+      <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+      <script type="text/javascript" src="./script.js"></script>
     </head>
-    <body>
+    <body onload="startNewGame()">
     <div id="header">
       <h1>Number Golf</h1>
       <p>Help Golfer Dave! Tell him how hard to swing his club to get a hole-in-one! Don't go over par!</p>
@@ -12,13 +15,14 @@
 
     <div id="game">
       <div id="guess_window">
-        <p>How hard should Golfer Dave swing? (1-100)</p>
+        <p id="instructions">How hard should Golfer Dave swing? (1-100)</p>
+        <p id="output"></p>
     
         <div id="guess_inputs">
           <input id="guess_input" type="input" placeholder="1-100">
-          <input id="guess_button" type="button" value="Swing!">
-          <input id="hint_button" type="button" value="Hint">
-          <input id="reset_button" type="button" value="Reset">
+          <input id="guess_button" type="button" value="Swing!" onclick="guessValue()">
+          <input id="hint_button" type="button" value="Hint" onclick="getHint()">
+          <input id="reset_button" type="button" value="Reset" onclick="startNewGame()">
         </div>
       </div>
 
