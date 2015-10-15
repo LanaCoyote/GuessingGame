@@ -63,7 +63,7 @@ GuessingGame.prototype.warmOrCold = function( guess ) {
     var last_guess = this.getLastGuess();
     if ( last_guess == -1 ) {
         // give a generic response if we haven't guessed anything yet
-        return "Drat! You missed!";
+        return 2;
     }
 
     // compute the difference in distances
@@ -74,11 +74,11 @@ GuessingGame.prototype.warmOrCold = function( guess ) {
 
     // figure out if we're warmer or colder
     if ( change > 0 ) {
-        return "Getting warmer!";
+        return -1;
     } else if ( change < 0 ) {
-        return "Getting colder...";
+        return 1;
     } else {
-        return "Just as far as before!";
+        return 0;
     }
 }
 
@@ -94,18 +94,18 @@ GuessingGame.prototype.guessValue = function( guess ) {
     var err = this.validateGuess( guess );
     if ( err ) {
         this.onOutput( err );
-        return;
+        return false;
     }
 
     // check how close we were
     if ( guess == this.getValue() ) {
         // right on the money!
         this.onWin();
-        return;
+        return true;
     } 
     
     // we're off, but by how far?
-    var output = this.warmOrCold( guess ) + "<br>You have " + ( this.shotsLeft() - 1 ) + " shots remaining";
+    var output = this.warmOrCold( guess );
     this.onOutput( output );
     
     // push our guess to the previous guess array
@@ -114,6 +114,8 @@ GuessingGame.prototype.guessValue = function( guess ) {
     if ( !this.hasGuessesLeft() ) {
         this.onLose();
     }
+
+    return true;
 }
 
 // sprite object definition
@@ -221,6 +223,10 @@ function getInstructions() {
     return $( "#instructions" );
 }
 
+function getGuessList() {
+    return $( "#previous_guess_list" );
+}
+
 var sprite_flag;
 function getFlag() {
     return sprite_flag;
@@ -244,7 +250,24 @@ function clearOutput() {
     getOutputElement().html( '' );
 }
 
-function onOutput( output ) {
+function onOutput( distChange ) {
+    if ( Number( distChange ) ) {
+        var output = "Drat! You missed!";
+
+        if ( distChange == 1 ) {
+            output = "Getting colder...";
+            getGuessList().children().last().css( "color", "blue" );
+        } else if ( distChange == -1 ) {
+            output = "Getting warmer...";
+            getGuessList().children().last().css( "color", "red" );
+        } else if ( distChange == 0 ) {
+            output = "Just as far as before...";
+        }
+    } else {
+        output = distChange;
+    }
+
+    output += "<br>You have " + getCurrentGame().shotsLeft() + " shots left";    
     getOutputElement().html( output );
 }
 
@@ -264,6 +287,7 @@ function showButtonsPreGame() {
     getInstructions().show();
 
     getResetButton().val( "Reset" );
+    getGuessList().html( '' );
     clearOutput();
     clearInput();
 }
@@ -284,11 +308,14 @@ function guessValue() {
 
     // do the guesswork (ha)
     var guess = getInputElement().val();
-    getCurrentGame().guessValue( guess );
+    getGuessList().append( "<li>" + guess + "</li>" );
+    if ( getCurrentGame().guessValue( guess ) ) {
+        // do our cool golfball animation
+        getBall().parabolaAnimation( guess * 6 );
+    } else {
+        getGuessList().children().last().remove();
+    }
     clearInput();
-
-    // do our cool golfball animation
-    getBall().parabolaAnimation( guess * 6 );
 }
 
 function getHint() {
@@ -311,9 +338,14 @@ function startNewGame() {
     getBall().resetAnimation();
 }
 
+var KEY_ENTER = 13;
+
 $( document ).ready( function() {
     // add our jquery event handlers
     getGuessButton().click( guessValue );
+    getInputElement().bind( 'keypress', function( event ) {
+        if ( event.keyCode == KEY_ENTER ) guessValue();
+    } );
     getHintButton().click( getHint );
     getResetButton().click( startNewGame );
 

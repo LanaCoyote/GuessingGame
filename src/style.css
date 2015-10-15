@@ -47,8 +47,15 @@ body {
   padding: 16px;
 
   max-width: 600px;
+  min-height: 300px;
 
   background: #fff;
+}
+
+#previous_guess_block {
+  display: block;
+  float: right;
+  text-align: right;
 }
 
 #bubble_window {
@@ -80,14 +87,6 @@ body {
 
   max-width: 800px;
   height: 200px;
-}
-
-img#sprite_dave {
-  position: relative;
-}
-
-img#sprite_flag {
-  position: relative;
 }
 
 #footer {
