@@ -157,7 +157,11 @@ function Golfball ( element ) {
     this.sprite = new Sprite( element );
     this.anim_time = 0;
     this.dest_x = 0;
-    this.init_pos = this.sprite.getPosition();
+    this.setInitialPosition( this.sprite.getPosition() );
+}
+
+Golfball.prototype.setInitialPosition = function( position ) {
+    this.init_pos = position;
 }
 
 Golfball.prototype.resetAnimation = function( dest_x ) {
@@ -356,4 +360,11 @@ $( document ).ready( function() {
 
     // start the game!
     startNewGame();
+} );
+
+$( window ).resize( function() {
+    getBall().setInitialPosition( {
+        left: getDave().getX() + getDave().element.width() + 4.5,
+        top: getDave().getY() + getDave().element.height() - getBall().sprite.element.height()
+    } );
 } );
